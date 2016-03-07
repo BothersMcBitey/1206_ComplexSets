@@ -10,11 +10,13 @@ public class MandlebrotSet implements ComplexSet {
 
 	@Override
 	public int getPointDivergenceDepth(ComplexNumber c) {
-		ComplexNumber z = c;
+		ComplexNumber z = c.clone();
 		int i = 0;
-		while(z.modulusSquared() < 4 && i < depth){
+		float m = z.modulusSquared();
+		while(m < 4 && i < depth){
 			z.square();
 			z.add(c);
+			m = z.modulusSquared();
 			i++;
 		}
 		return i;

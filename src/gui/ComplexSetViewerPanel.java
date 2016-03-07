@@ -2,6 +2,7 @@ package gui;
 
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
@@ -9,6 +10,7 @@ import javax.swing.JPanel;
 import numbers.ComplexNumber;
 import numbers.ComplexSet;
 
+@SuppressWarnings("serial")
 public class ComplexSetViewerPanel extends JPanel {
 
 	private BufferedImage img;
@@ -21,22 +23,21 @@ public class ComplexSetViewerPanel extends JPanel {
 	 * using the default values of -2, 2, -1.6, 1.6 for the mins/maxes
 	 * @param set
 	 */
-	public ComplexSetViewerPanel(ComplexSet set, int width, int height){
-		this(set, -2f, 2f, -1.6f, 1.6f, width, height);
+	public ComplexSetViewerPanel(ComplexSet set){
+		this(set, -2f, 2f, -1.6f, 1.6f);
 	}
 	
-	public ComplexSetViewerPanel(ComplexSet set, float realMin, float realMax, float imaginaryMin, float imaginaryMax, int width, int height) {
+	public ComplexSetViewerPanel(ComplexSet set, float realMin, float realMax, float imaginaryMin, float imaginaryMax) {
 		this.set = set;
 		this.realMin = realMin;
 		this.realMax = realMax;
 		this.imaginaryMin = imaginaryMin;
-		this.imaginaryMax = imaginaryMax;
-		setSize(width, height);
-		img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		this.imaginaryMax = imaginaryMax;		
 	}
 	
 	@Override
 	public void paintComponent(Graphics g){
+		img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 		updateImage();
 		g.drawImage(img, 0, 0, this);
 	}
@@ -48,11 +49,11 @@ public class ComplexSetViewerPanel extends JPanel {
 		float imaginaryStep = imaginaryHeight/((float) img.getWidth());		
 		for(float i = realMin; i < realMax; i += realStep){
 			for(float j = imaginaryMin; j < imaginaryMax; j+= imaginaryStep){
-				int n = set.getPointDivergenceDepth(new ComplexNumber(i, j));
+				int n = set.getDepth() - set.getPointDivergenceDepth(new ComplexNumber(i, j));
 				int x = (int) Math.floor((i - realMin) * (((float)img.getWidth()) / realWidth));				
 				int y = (int) Math.floor((j - imaginaryMin) * (((float)img.getHeight()) / imaginaryHeight));
 				int c = 255/set.getDepth();
-				int rgb = new Color(n* c, (set.getDepth() - n) * c, 100 * n % 255).getRGB();
+				int rgb = new Color((set.getDepth()-n)*c,(set.getDepth()-n)*c,(set.getDepth()-n)*c).getRGB();
 				try{
 				img.setRGB(x, y, rgb);
 				}catch(ArrayIndexOutOfBoundsException e){
@@ -60,6 +61,14 @@ public class ComplexSetViewerPanel extends JPanel {
 				}				
 			}
 		}
+	}
+	
+	public ComplexNumber getComplexAtPoint(Point p){				
+		float realWidth = realMax - realMin;
+		float imaginaryHeight = imaginaryMax - imaginaryMin;
+		float real = p.x * (realWidth/(float)getWidth()) + realMin;
+		float imaginary = p.y * (imaginaryHeight/(float)getHeight()) + imaginaryMin;
+		return new ComplexNumber(real, imaginary);
 	}
 
 	public float getRealMin() {

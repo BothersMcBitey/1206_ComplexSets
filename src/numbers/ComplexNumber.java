@@ -16,12 +16,21 @@ public class ComplexNumber {
 	}
 	
 	public void square(){
-		real = real * real - imaginary * imaginary;
-		imaginary = 2 * (real * imaginary);
+		float tempReal = real * real - imaginary * imaginary;
+		imaginary = 2 * real * imaginary;
+		real = tempReal;
 	}
 	
 	public float modulusSquared(){
 		return real*real + imaginary*imaginary;
+	}
+	
+	public ComplexNumber clone(){
+		return new ComplexNumber(real, imaginary);
+	}
+	
+	public String toString(){
+		return String.format("%.2f", real) + " + " + String.format("%.2f", imaginary) + "i";
 	}
 
 	public float getReal() {
