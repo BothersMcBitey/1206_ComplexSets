@@ -44,18 +44,19 @@ public class ComplexSetViewerPanel extends JPanel {
 
 	private void updateImage() {
 		float realWidth = realMax - realMin;
-		float realStep = realWidth/((float) img.getWidth());
 		float imaginaryHeight = imaginaryMax - imaginaryMin;
-		float imaginaryStep = imaginaryHeight/((float) img.getWidth());		
-		for(float i = realMin; i < realMax; i += realStep){
-			for(float j = imaginaryMin; j < imaginaryMax; j+= imaginaryStep){
-				int n = set.getDepth() - set.getPointDivergenceDepth(new ComplexNumber(i, j));
-				int x = (int) Math.floor((i - realMin) * (((float)img.getWidth()) / realWidth));				
-				int y = (int) Math.floor((j - imaginaryMin) * (((float)img.getHeight()) / imaginaryHeight));
+		
+		for(int x = 0; x < img.getWidth(); x++){
+			float offsetX = Math.abs((realMin * img.getWidth()) / realWidth);
+			float real = (x - offsetX) * (realWidth / (float)img.getWidth());
+			for(int y = 0; y < img.getHeight(); y++){
+				float offsetY = Math.abs((imaginaryMin * img.getHeight()) / imaginaryHeight);
+				float imaginary = (-(y - img.getHeight()/2)) * (imaginaryHeight / (float)img.getHeight());				
+				int n = set.getDepth() - set.getPointDivergenceDepth(new ComplexNumber(real, imaginary));
 				int c = 255/set.getDepth();
 				int rgb = new Color((set.getDepth()-n)*c,(set.getDepth()-n)*c,(set.getDepth()-n)*c).getRGB();
 				try{
-				img.setRGB(x, y, rgb);
+					img.setRGB(x, y, rgb);
 				}catch(ArrayIndexOutOfBoundsException e){
 					System.out.println(e.getMessage() + " x:" + x + " y:" + y);
 				}				
@@ -67,7 +68,7 @@ public class ComplexSetViewerPanel extends JPanel {
 		float realWidth = realMax - realMin;
 		float imaginaryHeight = imaginaryMax - imaginaryMin;
 		float real = p.x * (realWidth/(float)getWidth()) + realMin;
-		float imaginary = p.y * (imaginaryHeight/(float)getHeight()) + imaginaryMin;
+		float imaginary = -(p.y * (imaginaryHeight/(float)getHeight()) + imaginaryMin);
 		return new ComplexNumber(real, imaginary);
 	}
 

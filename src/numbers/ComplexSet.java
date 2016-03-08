@@ -2,7 +2,7 @@ package numbers;
 
 public interface ComplexSet {
 	
-	public int getPointDivergenceDepth(ComplexNumber d);
+	public int getPointDivergenceDepth(ComplexNumber c);
 	
 	public int getDepth();
 }

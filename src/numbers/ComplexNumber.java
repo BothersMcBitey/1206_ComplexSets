@@ -30,7 +30,10 @@ public class ComplexNumber {
 	}
 	
 	public String toString(){
-		return String.format("%.2f", real) + " + " + String.format("%.2f", imaginary) + "i";
+		String s = String.format("%.2f", real);
+		s += (imaginary >= 0) ? " + " : " - "; 
+		s += String.format("%.2f", Math.abs(imaginary)) + "i";
+		return s;
 	}
 
 	public float getReal() {
