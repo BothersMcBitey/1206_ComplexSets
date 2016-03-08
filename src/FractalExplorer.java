@@ -35,7 +35,7 @@ public class FractalExplorer extends JFrame{
 	private JLabel userPointLbl;
 	private JPanel mainPanel;
 	
-	private int cpHeight = 100; 
+	private int cpHeight = 60; 
 
 	public static void main(String[] args) {
 		try {
