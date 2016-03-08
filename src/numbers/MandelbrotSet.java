@@ -12,11 +12,9 @@ public class MandelbrotSet implements ComplexSet {
 	public int getPointDivergenceDepth(ComplexNumber c) {
 		ComplexNumber z = c.clone();
 		int i = 0;
-		float m = z.modulusSquared();
-		while(m < 4 && i < depth){
+		while(z.modulusSquared() < 4 && i < depth){
 			z.square();
 			z.add(c);
-			m = z.modulusSquared();
 			i++;
 		}
 		return i;

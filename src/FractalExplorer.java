@@ -1,16 +1,20 @@
 import java.awt.FlowLayout;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -35,10 +39,11 @@ public class FractalExplorer extends JFrame{
 
 	public static void main(String[] args) {
 		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {new FractalExplorer().init();}
 			});
-		} catch (InvocationTargetException | InterruptedException e) {
+		} catch (InvocationTargetException | InterruptedException | ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
 		}
 	}
@@ -84,27 +89,63 @@ public class FractalExplorer extends JFrame{
 		userPointLbl = new JLabel("Point selected: 0 + 0i");
 		controlPanel.add(userPointLbl);
 		
-		JLabel realZoomLbl = new JLabel("Zoom (R)");
-		controlPanel.add(realZoomLbl);
-		JSpinner realZoom = new JSpinner(new SpinnerNumberModel(1, 1, 20, 0.5));
-		realZoom.addChangeListener(new ChangeListener() {
+		JLabel realMinLbl = new JLabel("Real min");
+		controlPanel.add(realMinLbl);
+		JSpinner realMin = new JSpinner(new SpinnerNumberModel(-2, -2, 1, 0.25));
+		realMin.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setSize((int) (mandelbrotViewer.getWidth()*(Double)realZoom.getValue()), mandelbrotViewer.getHeight());
-				revalidate();
+				mandelbrotViewer.setRealMin(((Double)realMin.getValue()).floatValue());
 			}
 		});
-		controlPanel.add(realZoom);
+		controlPanel.add(realMin);
 		
-		JLabel imaginaryZoomLbl = new JLabel("Zoom (I)");
-		controlPanel.add(imaginaryZoomLbl);
-		JSpinner imaginaryZoom = new JSpinner(new SpinnerNumberModel(1, 1, 20, 0.5));
-		imaginaryZoom.addChangeListener(new ChangeListener() {
+		JLabel realMaxLbl = new JLabel("Real max");
+		controlPanel.add(realMaxLbl);
+		JSpinner realMax = new JSpinner(new SpinnerNumberModel(1, -2, 1, 0.25));
+		realMax.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setSize(mandelbrotViewer.getWidth(), (int) (mandelbrotViewer.getHeight()*(Double)imaginaryZoom.getValue()));
-				revalidate();
+				mandelbrotViewer.setRealMax(((Double)realMax.getValue()).floatValue());
 			}
 		});
-		controlPanel.add(imaginaryZoom);
+		controlPanel.add(realMax);
+		
+		JLabel imaginaryMinLbl = new JLabel("Imaginary min");
+		controlPanel.add(imaginaryMinLbl);
+		JSpinner imaginaryMin = new JSpinner(new SpinnerNumberModel(-1.6, -1.6, 1.6, 0.2));
+		imaginaryMin.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setImaginaryMin(((Double)imaginaryMin.getValue()).floatValue());
+			}
+		});
+		controlPanel.add(imaginaryMin);
+		
+		JLabel imaginaryMaxLbl = new JLabel("Imaginary max");
+		controlPanel.add(imaginaryMaxLbl);
+		JSpinner imaginaryMax = new JSpinner(new SpinnerNumberModel(1.6, -1.6, 1.6, 0.2));
+		imaginaryMax.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setImaginaryMax(((Double)imaginaryMax.getValue()).floatValue());
+			}
+		});
+		controlPanel.add(imaginaryMax);
+		
+		JLabel iterationsLbl = new JLabel("No. Iterations");
+		controlPanel.add(iterationsLbl);
+		JSpinner iterations = new JSpinner(new SpinnerNumberModel(100, 1, 1000, 20));
+		iterations.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setIterationDepth((int)iterations.getValue());
+			}
+		});
+		controlPanel.add(iterations);
+		
+		JButton exit = new JButton("Exit");
+		exit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.exit(0);
+			}
+		});
+		controlPanel.add(exit);
 		
 		mainPanel.add(controlPanel);
 	}

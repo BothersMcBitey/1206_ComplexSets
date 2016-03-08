@@ -46,19 +46,28 @@ public class ComplexSetViewerPanel extends JPanel {
 		float realWidth = realMax - realMin;
 		float imaginaryHeight = imaginaryMax - imaginaryMin;
 		
+		double c = 255f/((double)set.getDepth());
+		
 		for(int x = 0; x < img.getWidth(); x++){
 			float offsetX = Math.abs((realMin * img.getWidth()) / realWidth);
 			float real = (x - offsetX) * (realWidth / (float)img.getWidth());
 			for(int y = 0; y < img.getHeight(); y++){
 				float offsetY = Math.abs((imaginaryMin * img.getHeight()) / imaginaryHeight);
-				float imaginary = (-(y - img.getHeight()/2)) * (imaginaryHeight / (float)img.getHeight());				
-				int n = set.getDepth() - set.getPointDivergenceDepth(new ComplexNumber(real, imaginary));
-				int c = 255/set.getDepth();
-				int rgb = new Color((set.getDepth()-n)*c,(set.getDepth()-n)*c,(set.getDepth()-n)*c).getRGB();
+				float imaginary = (-(y - offsetY)) * (imaginaryHeight / (float)img.getHeight());
+				
+				int n = set.getPointDivergenceDepth(new ComplexNumber(real, imaginary));
+				int rgb =0;
+				int r = (int)(n*c);
+				try{					
+					rgb = new Color(r,r,r).getRGB();
+				}
+				catch (IllegalArgumentException e) {
+					System.err.println(r);
+				}
 				try{
 					img.setRGB(x, y, rgb);
 				}catch(ArrayIndexOutOfBoundsException e){
-					System.out.println(e.getMessage() + " x:" + x + " y:" + y);
+					System.err.println(e.getMessage() + " x:" + x + " y:" + y);
 				}				
 			}
 		}
@@ -79,6 +88,7 @@ public class ComplexSetViewerPanel extends JPanel {
 	public void setRealMin(float realMin) throws IllegalArgumentException{
 		if(realMin >= realMax) throw new IllegalArgumentException("realMin must be less than realMax");
 		this.realMin = realMin;
+		repaint();
 	}
 
 	public float getRealMax() {
@@ -88,6 +98,7 @@ public class ComplexSetViewerPanel extends JPanel {
 	public void setRealMax(float realMax) throws IllegalArgumentException{
 		if(realMax <= realMin) throw new IllegalArgumentException("realMax must be greater than realMin");
 		this.realMax = realMax;
+		repaint();
 	}
 
 	public float getImaginaryMin() {
@@ -97,6 +108,7 @@ public class ComplexSetViewerPanel extends JPanel {
 	public void setImaginaryMin(float imaginaryMin) throws IllegalArgumentException{
 		if(imaginaryMin >= imaginaryMax) throw new IllegalArgumentException("imaginaryMin must be less than imaginaryMax");
 		this.imaginaryMin = imaginaryMin;
+		repaint();
 	}
 
 	public float getImaginaryMax() {
@@ -106,6 +118,12 @@ public class ComplexSetViewerPanel extends JPanel {
 	public void setImaginaryMax(float imaginaryMax) throws IllegalArgumentException{
 		if(imaginaryMax <= imaginaryMin) throw new IllegalArgumentException("imaginaryMax must be greater than imaginaryMin");
 		this.imaginaryMax = imaginaryMax;
+		repaint();
+	}
+	
+	public void setIterationDepth(int depth){
+		set.setDepth(depth);
+		repaint();
 	}
 	
 }

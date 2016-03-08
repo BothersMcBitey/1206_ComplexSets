@@ -13,14 +13,18 @@ public class JuliaSet implements ComplexSet {
 	@Override
 	public int getPointDivergenceDepth(ComplexNumber z) {
 		int i = 0;
-		float m = z.modulusSquared();
-		while(m < 4 && i < depth){
+		while(z.modulusSquared() < 4 && i < depth){
 			z.square();
 			z.add(c);
-			m = z.modulusSquared();
 			i++;
 		}
 		return i;
+	}
+	
+	@Override
+	public void setDepth(int depth) throws IllegalArgumentException{
+		if(depth < 0) throw new IllegalArgumentException(depth + " is not a valid depth");
+		this.depth = depth;
 	}
 
 	@Override
