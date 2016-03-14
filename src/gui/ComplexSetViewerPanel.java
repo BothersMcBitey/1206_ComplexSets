@@ -6,9 +6,10 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
-import numbers.ComplexNumber;
-import numbers.ComplexSet;
+import complexMaths.ComplexNumber;
+import complexMaths.ComplexSet;
 
 @SuppressWarnings("serial")
 public class ComplexSetViewerPanel extends JPanel {
@@ -32,7 +33,7 @@ public class ComplexSetViewerPanel extends JPanel {
 		this.realMin = realMin;
 		this.realMax = realMax;
 		this.imaginaryMin = imaginaryMin;
-		this.imaginaryMax = imaginaryMax;		
+		this.imaginaryMax = imaginaryMax;	
 	}
 	
 	@Override
@@ -71,6 +72,15 @@ public class ComplexSetViewerPanel extends JPanel {
 				}				
 			}
 		}
+	}
+	
+	public void updateSet(ComplexSet set) {
+		this.set = set;
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				repaint();
+			}
+		});
 	}
 	
 	public ComplexNumber getComplexAtPoint(Point p){				
@@ -124,6 +134,10 @@ public class ComplexSetViewerPanel extends JPanel {
 	public void setIterationDepth(int depth){
 		set.setDepth(depth);
 		repaint();
+	}
+
+	public ComplexSet getSet() {
+		return set;
 	}
 	
 }

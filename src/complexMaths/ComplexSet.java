@@ -1,6 +1,8 @@
-package numbers;
+package complexMaths;
 
-public interface ComplexSet {
+import java.io.Serializable;
+
+public interface ComplexSet extends Serializable{
 	
 	public int getPointDivergenceDepth(ComplexNumber c);
 	

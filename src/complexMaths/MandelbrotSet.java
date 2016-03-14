@@ -1,4 +1,4 @@
-package numbers;
+package complexMaths;
 
 public class MandelbrotSet implements ComplexSet {
 	

@@ -19,10 +19,8 @@ import javax.swing.WindowConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import gui.ComplexSetViewerPanel;
-import numbers.ComplexNumber;
-import numbers.JuliaSet;
-import numbers.MandelbrotSet;
+import complexMaths.*;
+import gui.*;
 
 @SuppressWarnings("serial")
 public class FractalExplorer extends JFrame{
@@ -61,83 +59,41 @@ public class FractalExplorer extends JFrame{
 		mainPanel = new JPanel(null);
 		setContentPane(mainPanel);
 		
-		mandelbrotInit();	
+		setsInit();	
 		controlsInit();
 			
 		setVisible(true);
 		setResizable(false);
 	}
 	
-	private void mandelbrotInit(){
+	private void setsInit(){
 		int h = getHeight() - ((getHeight()/10 < cpHeight) ? cpHeight : getHeight()/10);
 		mandelbrotViewer = new ComplexSetViewerPanel(new MandelbrotSet(100), -2f, 0.8f, -1.6f, 1.6f);
-		mandelbrotViewer.setBounds(0, 0, getWidth(), h);
+		mandelbrotViewer.setBounds(0, 0, getWidth()/2, h);
 		mandelbrotViewer.addMouseListener(new MouseAdapter() {
 			public void mouseClicked(MouseEvent e){
 				userSelectedPoint = mandelbrotViewer.getComplexAtPoint(e.getPoint());
 				userPointLbl.setText("Point selected: " + userSelectedPoint.toString());
-				displayJuliaSet();
+				juliaViewer.updateSet(new JuliaSet(200, userSelectedPoint));
 			}
 		});	
 		mainPanel.add(mandelbrotViewer);
+		
+		userSelectedPoint = new ComplexNumber(0, 0);
+		juliaViewer = new ComplexSetViewerPanel(new JuliaSet(100, userSelectedPoint));
+		juliaViewer.setBounds(getWidth()/2, 0, getWidth()/2, mandelbrotViewer.getHeight());
+		mainPanel.add(juliaViewer);
 	}
 	
 	private void controlsInit(){
-		JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
-		controlPanel.setBounds(0, mandelbrotViewer.getHeight(), getWidth(), (getHeight()/10 < cpHeight) ? cpHeight : getHeight()/10);
+		cpHeight = (getHeight()/10 < cpHeight) ? cpHeight : getHeight()/10;
 		
-		userPointLbl = new JLabel("Point selected: 0 + 0i");
-		controlPanel.add(userPointLbl);
+		JPanel controlPanel = new JPanel();
+		controlPanel.setBounds(0, mandelbrotViewer.getHeight(), getWidth(), cpHeight);
 		
-		JLabel realMinLbl = new JLabel("Real min");
-		controlPanel.add(realMinLbl);
-		JSpinner realMin = new JSpinner(new SpinnerNumberModel(-2, -2, 1, 0.25));
-		realMin.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setRealMin(((Double)realMin.getValue()).floatValue());
-			}
-		});
-		controlPanel.add(realMin);
+		controlPanel.add(boundsInit());
 		
-		JLabel realMaxLbl = new JLabel("Real max");
-		controlPanel.add(realMaxLbl);
-		JSpinner realMax = new JSpinner(new SpinnerNumberModel(1, -2, 1, 0.25));
-		realMax.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setRealMax(((Double)realMax.getValue()).floatValue());
-			}
-		});
-		controlPanel.add(realMax);
-		
-		JLabel imaginaryMinLbl = new JLabel("Imaginary min");
-		controlPanel.add(imaginaryMinLbl);
-		JSpinner imaginaryMin = new JSpinner(new SpinnerNumberModel(-1.6, -1.6, 1.6, 0.2));
-		imaginaryMin.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setImaginaryMin(((Double)imaginaryMin.getValue()).floatValue());
-			}
-		});
-		controlPanel.add(imaginaryMin);
-		
-		JLabel imaginaryMaxLbl = new JLabel("Imaginary max");
-		controlPanel.add(imaginaryMaxLbl);
-		JSpinner imaginaryMax = new JSpinner(new SpinnerNumberModel(1.6, -1.6, 1.6, 0.2));
-		imaginaryMax.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setImaginaryMax(((Double)imaginaryMax.getValue()).floatValue());
-			}
-		});
-		controlPanel.add(imaginaryMax);
-		
-		JLabel iterationsLbl = new JLabel("No. Iterations");
-		controlPanel.add(iterationsLbl);
-		JSpinner iterations = new JSpinner(new SpinnerNumberModel(100, 1, 1000, 20));
-		iterations.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setIterationDepth((int)iterations.getValue());
-			}
-		});
-		controlPanel.add(iterations);
+		controlPanel.add(storageInit());
 		
 		JButton exit = new JButton("Exit");
 		exit.addActionListener(new ActionListener() {
@@ -150,17 +106,69 @@ public class FractalExplorer extends JFrame{
 		mainPanel.add(controlPanel);
 	}
 	
-	private void displayJuliaSet(){			
-		if(juliaViewer == null){
-			mandelbrotViewer.setBounds(0, 0, getWidth()/2, mandelbrotViewer.getHeight());
-		} else {
-			mainPanel.remove(juliaViewer);
-		}
+	private JPanel boundsInit(){
+		JPanel boundsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
+		boundsPanel.setBounds(0, mandelbrotViewer.getHeight(), getWidth(), cpHeight);
 		
-		juliaViewer = new ComplexSetViewerPanel(new JuliaSet(100, userSelectedPoint));
-		juliaViewer.setBounds(getWidth()/2, 0, getWidth()/2, mandelbrotViewer.getHeight());
-		mainPanel.add(juliaViewer);
-		revalidate();
-		repaint();
+		userPointLbl = new JLabel("Point selected: 0 + 0i");
+		boundsPanel.add(userPointLbl);
+		
+		JLabel realMinLbl = new JLabel("Real min");
+		boundsPanel.add(realMinLbl);
+		JSpinner realMin = new JSpinner(new SpinnerNumberModel(-2, -2, 1, 0.25));
+		realMin.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setRealMin(((Double)realMin.getValue()).floatValue());
+			}
+		});
+		boundsPanel.add(realMin);
+		
+		JLabel realMaxLbl = new JLabel("Real max");
+		boundsPanel.add(realMaxLbl);
+		JSpinner realMax = new JSpinner(new SpinnerNumberModel(1, -2, 1, 0.25));
+		realMax.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setRealMax(((Double)realMax.getValue()).floatValue());
+			}
+		});
+		boundsPanel.add(realMax);
+		
+		JLabel imaginaryMinLbl = new JLabel("Imaginary min");
+		boundsPanel.add(imaginaryMinLbl);
+		JSpinner imaginaryMin = new JSpinner(new SpinnerNumberModel(-1.6, -1.6, 1.6, 0.2));
+		imaginaryMin.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setImaginaryMin(((Double)imaginaryMin.getValue()).floatValue());
+			}
+		});
+		boundsPanel.add(imaginaryMin);
+		
+		JLabel imaginaryMaxLbl = new JLabel("Imaginary max");
+		boundsPanel.add(imaginaryMaxLbl);
+		JSpinner imaginaryMax = new JSpinner(new SpinnerNumberModel(1.6, -1.6, 1.6, 0.2));
+		imaginaryMax.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setImaginaryMax(((Double)imaginaryMax.getValue()).floatValue());
+			}
+		});
+		boundsPanel.add(imaginaryMax);
+		
+		JLabel iterationsLbl = new JLabel("No. Iterations");
+		boundsPanel.add(iterationsLbl);
+		JSpinner iterations = new JSpinner(new SpinnerNumberModel(100, 1, 1000, 20));
+		iterations.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				mandelbrotViewer.setIterationDepth((int)iterations.getValue());
+			}
+		});
+		boundsPanel.add(iterations);
+		
+		return boundsPanel;
+	}
+	
+	private JPanel storageInit(){
+		SetStoragePanel storagePanel = new SetStoragePanel(cpHeight-20, juliaViewer);
+//		storagePanel
+		return storagePanel;
 	}
 }

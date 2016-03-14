@@ -1,6 +1,8 @@
-package numbers;
+package complexMaths;
 
-public class ComplexNumber {
+import java.io.Serializable;
+
+public class ComplexNumber implements Serializable {
 
 	private float real;
 	private float imaginary;

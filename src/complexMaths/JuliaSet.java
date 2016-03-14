@@ -1,13 +1,17 @@
-package numbers;
+package complexMaths;
 
-public class JuliaSet implements ComplexSet {
+import java.io.Serializable;
+
+public class JuliaSet implements ComplexSet{
 
 	private int depth;
 	private ComplexNumber c;
+	private String name;
 	
 	public JuliaSet(int depth, ComplexNumber c) {
 		this.depth = depth;
 		this.c = c;
+		this.name = "juliaSet";
 	}
 	
 	@Override
@@ -30,6 +34,19 @@ public class JuliaSet implements ComplexSet {
 	@Override
 	public int getDepth() {
 		return depth;
+	}
+	
+	public void setName(String name){
+		this.name = name;
+	}
+	
+	public String getName(){
+		return name;
+	}
+	
+	@Override
+	public String toString(){		
+		return name;
 	}
 
 }
