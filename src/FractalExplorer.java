@@ -29,6 +29,7 @@ public class FractalExplorer extends JFrame{
 	
 	private ComplexSetViewerPanel mandelbrotViewer;
 	private ComplexSetViewerPanel juliaViewer;
+	private SetStoragePanel storagePanel;
 	
 	private JLabel userPointLbl;
 	private JPanel mainPanel;
@@ -36,7 +37,7 @@ public class FractalExplorer extends JFrame{
 	private int cpHeight = 60; 
 
 	public static void main(String[] args) {
-		try {
+		try {;
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			SwingUtilities.invokeAndWait(new Runnable() {
 				public void run() {new FractalExplorer().init();}
@@ -167,8 +168,7 @@ public class FractalExplorer extends JFrame{
 	}
 	
 	private JPanel storageInit(){
-		SetStoragePanel storagePanel = new SetStoragePanel(cpHeight-20, juliaViewer);
-//		storagePanel
+		storagePanel = new SetStoragePanel(cpHeight-20, juliaViewer);
 		return storagePanel;
 	}
 }

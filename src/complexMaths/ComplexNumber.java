@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class ComplexNumber implements Serializable {
 
+	private static final long serialVersionUID = 428336478432597116L;
 	private float real;
 	private float imaginary;
 	

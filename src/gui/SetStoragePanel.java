@@ -6,13 +6,13 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 
@@ -33,7 +33,6 @@ public class SetStoragePanel extends JPanel {
 	JList<ComplexSet> list;
 	DefaultListModel<ComplexSet> model;
 	private File setFile;
-	private boolean fileExisted = true;
 	ObjectOutputStream out;
 	
 	public SetStoragePanel(int height, ComplexSetViewerPanel target) {
@@ -41,7 +40,6 @@ public class SetStoragePanel extends JPanel {
 		this.target = target;
 		setFile = new File("sets");
 		if(!setFile.exists()){
-			fileExisted = false;
 			try {
 				Files.createFile(setFile.toPath());
 			} catch (IOException e) {
@@ -51,6 +49,9 @@ public class SetStoragePanel extends JPanel {
 		init(height);
 		try {
 			out = new ObjectOutputStream(new FileOutputStream(setFile));
+			for(int i = 0; i < model.size(); i++){
+				out.writeObject(model.getElementAt(i));
+			}
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -98,7 +99,8 @@ public class SetStoragePanel extends JPanel {
 			while((o  = in.readObject()) != null){				
 				sets.add((ComplexSet) o);
 			}
-		} catch (IOException | ClassNotFoundException e){
+			in.close();
+ 		} catch (IOException | ClassNotFoundException e){		
 			e.printStackTrace();
 		}
 		return sets.toArray(new ComplexSet[1]);
