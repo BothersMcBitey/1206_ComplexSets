@@ -2,11 +2,38 @@ package complexMaths;
 
 import java.io.Serializable;
 
-public interface ComplexSet extends Serializable{
+public abstract class ComplexSet implements Serializable{
 	
-	public int getPointDivergenceDepth(ComplexNumber c);
+	private static final long serialVersionUID = 4109157370589382533L;
+	private int depth;
+	private String name;
 	
-	public int getDepth();
+	public ComplexSet(int depth, String name) {
+		setDepth(depth);
+		setName("set");
+	}
 	
-	public void setDepth(int depth);
+	public abstract int getPointDivergenceDepth(ComplexNumber c);
+	
+	public void setDepth(int depth) throws IllegalArgumentException{
+		if(depth < 0) throw new IllegalArgumentException(depth + " is not a valid depth");
+		this.depth = depth;
+	}
+	
+	public int getDepth(){
+		return depth;
+	}
+	
+	public void setName(String name){
+		this.name = name;
+	}
+	
+	public String getName(){
+		return name;
+	}
+	
+	@Override
+	public String toString(){		
+		return name;
+	}
 }
