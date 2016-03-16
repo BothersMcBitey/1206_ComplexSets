@@ -5,10 +5,10 @@ import java.io.Serializable;
 public class ComplexNumber implements Serializable {
 
 	private static final long serialVersionUID = 428336478432597116L;
-	private float real;
-	private float imaginary;
+	private double real;
+	private double imaginary;
 	
-	public ComplexNumber(float real, float imaginary) {
+	public ComplexNumber(double real, double imaginary) {
 		this.real = real;
 		this.imaginary = imaginary;
 	}
@@ -19,12 +19,12 @@ public class ComplexNumber implements Serializable {
 	}
 	
 	public void square(){
-		float tempReal = real * real - imaginary * imaginary;
+		double tempReal = real * real - imaginary * imaginary;
 		imaginary = 2 * real * imaginary;
 		real = tempReal;
 	}
 	
-	public float modulusSquared(){
+	public double modulusSquared(){
 		return real*real + imaginary*imaginary;
 	}
 	
@@ -33,25 +33,25 @@ public class ComplexNumber implements Serializable {
 	}
 	
 	public String toString(){
-		String s = String.format("%.2f", real);
+		String s = String.format("%.5f", real);
 		s += (imaginary >= 0) ? " + " : " - "; 
-		s += String.format("%.2f", Math.abs(imaginary)) + "i";
+		s += String.format("%.5f", Math.abs(imaginary)) + "i";
 		return s;
 	}
 
-	public float getReal() {
+	public double getReal() {
 		return real;
 	}
 
-	public void setReal(float real) {
+	public void setReal(double real) {
 		this.real = real;
 	}
 
-	public float getImaginary() {
+	public double getImaginary() {
 		return imaginary;
 	}
 
-	public void setImaginary(float imaginary) {
+	public void setImaginary(double imaginary) {
 		this.imaginary = imaginary;
 	}
 }

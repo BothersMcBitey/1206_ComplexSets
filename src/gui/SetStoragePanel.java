@@ -6,7 +6,6 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -30,31 +29,21 @@ import complexMaths.ComplexSet;
 public class SetStoragePanel extends JPanel {
 
 	private ComplexSetViewerPanel target;
-	JList<ComplexSet> list;
-	DefaultListModel<ComplexSet> model;
+	private JList<ComplexSet> list;
+	private DefaultListModel<ComplexSet> model;
+	
 	private File setFile;
-	ObjectOutputStream out;
 	
 	public SetStoragePanel(int height, ComplexSetViewerPanel target) {
 		super(new GridBagLayout());
 		this.target = target;
-		setFile = new File("sets");
+		
+		setFile = new File("sets.txt");			
 		if(!setFile.exists()){
-			try {
-				Files.createFile(setFile.toPath());
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			try {Files.createFile(setFile.toPath());} catch (IOException e) {}
 		}
+		
 		init(height);
-		try {
-			out = new ObjectOutputStream(new FileOutputStream(setFile));
-			for(int i = 0; i < model.size(); i++){
-				out.writeObject(model.getElementAt(i));
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	private void init(int height){
@@ -63,7 +52,11 @@ public class SetStoragePanel extends JPanel {
 		JButton save = new JButton("Save Julia Set");
 		save.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				saveSet(target.getSet());
+				try {
+					saveSet(target.getSet());
+				} catch (Exception e1) {
+					JOptionPane.showMessageDialog(save, "This set is already saved under the name " + target.getSet().getName());
+				}
 			}
 		});
 		add(save, g);
@@ -84,7 +77,7 @@ public class SetStoragePanel extends JPanel {
 		list = new JList<ComplexSet>(model);
 		
 		JScrollPane sp = new JScrollPane(list);
-		sp.setPreferredSize(new Dimension(200, height));
+		sp.setPreferredSize(new Dimension(200, height - 20));
 		g.gridx = 1;
 		g.gridy = 0;
 		g.gridheight = 2;
@@ -93,38 +86,57 @@ public class SetStoragePanel extends JPanel {
 	
 	private ComplexSet[] loadSets(){
 		ArrayList<ComplexSet> sets = new ArrayList<>();
- 		try{
-			ObjectInputStream in = new ObjectInputStream(new FileInputStream(setFile));
+		
+		try(ObjectInputStream in = new ObjectInputStream(new FileInputStream(setFile))){
 			Object o;
-			while((o  = in.readObject()) != null){				
+			o = in.readObject();
+			System.out.println(o);
+			while(o != null){
 				sets.add((ComplexSet) o);
+				o = in.readObject();
+				System.out.println(o);
 			}
-			in.close();
- 		} catch (IOException | ClassNotFoundException e){		
-			e.printStackTrace();
+		} catch (IOException | ClassNotFoundException e){
+//			e.printStackTrace();
 		}
-		return sets.toArray(new ComplexSet[1]);
+		
+		System.out.println(sets.size());
+		
+		return sets.toArray(new ComplexSet[0]);
 	}
 	
-	private void saveSet(ComplexSet set){
-		set.setName(JOptionPane.showInputDialog("Please enter a name for the set you wish to save: "));
+	private void saveSet(ComplexSet set) throws Exception{
+		if(model.contains(set)) throw new Exception();
 		
-		try{
-			out.writeObject(set);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}	
+		ArrayList<String> names = new ArrayList<>();
+		for(Object c : model.toArray()){
+			names.add(((ComplexSet)c).getName());
+		}
+		
+		String name = "";
+		
+		while(name.equals("") || names.contains(name)){
+			name = JOptionPane.showInputDialog("Please enter a name for the set you wish to save: ");
+		}
+		
+		set.setName(name);
 		model.addElement(set);
 		SwingUtilities.invokeLater(new Runnable(){public void run(){revalidate();}});
+
+		writeSetsToFile();
 	}
 	
-	@Override
-	protected void finalize(){
-		try {
+	private void writeSetsToFile(){
+		try(ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(setFile))){
+			for(Object set : model.toArray()){
+				ComplexSet s = (ComplexSet) set;
+				System.out.println(s.getName());
+				out.writeObject(s);
+			}
 			out.flush();
 			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (IOException e){
+//			e.printStackTrace();
 		}
 	}
 }
