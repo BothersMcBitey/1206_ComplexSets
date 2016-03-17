@@ -47,11 +47,9 @@ public class FractalExplorer extends JFrame{
 	private int cpHeight = 60; 
 
 	public static void main(String[] args) {
-		try {;
+		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-			SwingUtilities.invokeAndWait(new Runnable() {
-				public void run() {new FractalExplorer().init();}
-			});
+			SwingUtilities.invokeAndWait(new Runnable(){ public void run(){ new FractalExplorer().init();}});
 		} catch (InvocationTargetException | InterruptedException | ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
 		}
@@ -62,11 +60,13 @@ public class FractalExplorer extends JFrame{
 	}
 	
 	public void init(){
+		//makes sure the program is 'fullscreened' and components are the correct size
 		setSize(Toolkit.getDefaultToolkit().getScreenSize());	
 		setExtendedState(JFrame.MAXIMIZED_BOTH);
 		setUndecorated(true);
 		setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 		
+		//TODO: replace null layout with gridbag?
 		mainPanel = new JPanel(null);
 		setContentPane(mainPanel);
 		
@@ -74,22 +74,32 @@ public class FractalExplorer extends JFrame{
 		controlsInit();
 			
 		setVisible(true);
+		//Because of the way the rendering is done, resizing can cause serious issues
 		setResizable(false);
 	}
 	
 	private void setsInit(){
+		//Makes sure there is enough room for the controls beneath the set panels
 		int h = getHeight() - ((getHeight()/10 < cpHeight) ? cpHeight : getHeight()/10);
+		//creates mandlebrot set viewer with slightly non-standard sizing, as having realMAx at 1 looks better
 		mandelbrotViewer = new ComplexSetViewerPanel(new MandelbrotSet(100), -2, 1, -1.6, 1.6);
 		mandelbrotViewer.setBounds(0, 0, getWidth()/2, h);
+		
+		//This listener updates the julia set viewer as the mouse moves, just switch 'mouseMoved' for 'mouseClicked'
+		//and change the method to 'addMouseListener' to make it work on click instead
 		mandelbrotViewer.addMouseMotionListener(new MouseAdapter() {
+			//TODO:make this run in a different thread
 			public void mouseMoved(MouseEvent e){
+				//update the current point
 				userSelectedPoint = mandelbrotViewer.getComplexAtPoint(e.getPoint());
 				userPointLbl.setText(userSelectedPoint.toString());
+				//update the julia set
 				juliaViewer.updateSet(new JuliaSet(200, userSelectedPoint));
 			}
 		});	
 		mainPanel.add(mandelbrotViewer);
 		
+		//Set initial values for selected point and julia set
 		userSelectedPoint = new ComplexNumber(0, 0);
 		juliaViewer = new ComplexSetViewerPanel(new JuliaSet(100, userSelectedPoint));
 		juliaViewer.setBounds(getWidth()/2, 0, getWidth()/2, mandelbrotViewer.getHeight());
@@ -97,23 +107,29 @@ public class FractalExplorer extends JFrame{
 	}
 	
 	private void controlsInit(){
+		//make sure controls take up the right amount of space
 		cpHeight = (getHeight()/10 < cpHeight) ? cpHeight : getHeight()/10;
 		
 		JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
 		controlPanel.setBounds(0, mandelbrotViewer.getHeight(), getWidth(), cpHeight);
 		
+		//add the mandlebrot set bounds controls
 		controlPanel.add(boundsInit());
 		
+		//add seperator to make UI easier to understand
 		JSeparator sep = new JSeparator(JSeparator.VERTICAL);
 		sep.setPreferredSize(new Dimension(1, cpHeight - 20));
 		controlPanel.add(sep);
 		
+		//add julia set storage controls
 		controlPanel.add(storageInit());
 		
+		//another seperator
 		JSeparator sep1 = new JSeparator(JSeparator.VERTICAL);
 		sep1.setPreferredSize(new Dimension(1, cpHeight - 20));
 		controlPanel.add(sep1);
 		
+		//add exit button
 		JButton exit = new JButton("Exit");
 		exit.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -129,96 +145,94 @@ public class FractalExplorer extends JFrame{
 		JPanel boundsPanel = new JPanel(new GridBagLayout());
 		boundsPanel.setBounds(0, mandelbrotViewer.getHeight(), getWidth(), cpHeight);
 		
-		GridBagConstraints g = new GridBagConstraints(0, 0, 1, 1, 0.5, 0.5, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0);
+		//constraints made with 5px insets so components are nicely spaced
+		GridBagConstraints c = new GridBagConstraints(0, 0, 1, 1, 0.5, 0.5, GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5, 5, 5, 5), 0, 0);
 		
+		//add user selected point labels
 		JLabel userPointCaptionLbl = new JLabel("Point selected: ");
-		boundsPanel.add(userPointCaptionLbl, g);
+		boundsPanel.add(userPointCaptionLbl, c);
 		userPointLbl = new JLabel("0 + 0i");
-		g.gridx = 1;
-		boundsPanel.add(userPointLbl, g);
+		c.gridx = 1;
+		boundsPanel.add(userPointLbl, c);
 		
+		//add iteration controls
 		JLabel iterationsLbl = new JLabel("No. Iterations");
-		g.gridy = 1;
-		g.gridx = 0;
-		boundsPanel.add(iterationsLbl, g);
+		c.gridy = 1;
+		c.gridx = 0;
+		boundsPanel.add(iterationsLbl, c);
 		JSpinner iterations = new JSpinner(new SpinnerNumberModel(100, 1, 1000, 20));
-		iterations.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setIterationDepth((int)iterations.getValue());
-				mandelbrotViewer.repaint();
-			}
-		});
-		g.gridx = 1;
-		boundsPanel.add(iterations, g);
+		c.gridx = 1;
+		boundsPanel.add(iterations, c);
 		
+		//ADD MANDLEBROT MIN/MAX CONTROLS----------------------------------------------------------
+		//RMin label
 		JLabel realMinLbl = new JLabel("Real min");
-		g.gridy = 0;
-		g.gridx = 2;
-		boundsPanel.add(realMinLbl, g);
+		c.gridy = 0;
+		c.gridx = 2;
+		boundsPanel.add(realMinLbl, c);
+		//RMin spinner
 		realMin = new JSpinner(new SpinnerNumberModel(-2, -2, 1, 0.25));
-		realMin.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setRealMin((double) realMin.getValue());
-				mandelbrotViewer.repaint();
-			}
-		});
-		g.gridx = 3;
-		boundsPanel.add(realMin, g);
+		c.gridx = 3;
+		boundsPanel.add(realMin, c);
 		
+		//RMax label
 		JLabel realMaxLbl = new JLabel("Real max");
-		g.gridx = 2;
-		g.gridy = 1;
-		boundsPanel.add(realMaxLbl, g);	
+		c.gridx = 2;
+		c.gridy = 1;
+		boundsPanel.add(realMaxLbl, c);
+		//RMax spinner
 		realMax = new JSpinner(new SpinnerNumberModel(1, -2, 1, 0.25));
-		realMax.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setRealMax((double)realMax.getValue());
-				mandelbrotViewer.repaint();
-			}
-		});
-		g.gridx = 3;
-		boundsPanel.add(realMax, g);
+		c.gridx = 3;
+		boundsPanel.add(realMax, c);
 		
+		//IMin label
 		JLabel imaginaryMinLbl = new JLabel("Imaginary min");
-		g.gridx = 4;
-		g.gridy = 0;
-		boundsPanel.add(imaginaryMinLbl, g);
+		c.gridx = 4;
+		c.gridy = 0;
+		boundsPanel.add(imaginaryMinLbl, c);
+		//IMin spinner
 		imaginaryMin = new JSpinner(new SpinnerNumberModel(-1.6, -1.6, 1.6, 0.2));
-		imaginaryMin.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setImaginaryMin((double)imaginaryMin.getValue());
-				mandelbrotViewer.repaint();
-			}
-		});
-		g.gridx = 5;
-		boundsPanel.add(imaginaryMin, g);
+		c.gridx = 5;
+		boundsPanel.add(imaginaryMin, c);
 		
+		//IMax label
 		JLabel imaginaryMaxLbl = new JLabel("Imaginary max");
-		g.gridx = 4;
-		g.gridy = 1;
-		boundsPanel.add(imaginaryMaxLbl, g);
+		c.gridx = 4;
+		c.gridy = 1;
+		boundsPanel.add(imaginaryMaxLbl, c);
+		//IMax spinner
 		imaginaryMax = new JSpinner(new SpinnerNumberModel(1.6, -1.6, 1.6, 0.2));
-		imaginaryMax.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				mandelbrotViewer.setImaginaryMax((double)imaginaryMax.getValue());
+		c.gridx = 5;
+		boundsPanel.add(imaginaryMax, c);
+		
+		//Mandelbrot update button
+		JButton updateMandelbrot = new JButton("Update Mandelbrot Set");
+		updateMandelbrot.addActionListener(new ActionListener() {			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				mandelbrotViewer.setAxisBounds((double)realMin.getValue(), (double)realMax.getValue(), (double)imaginaryMin.getValue(), (double)imaginaryMax.getValue());
 				mandelbrotViewer.repaint();
 			}
 		});
-		g.gridx = 5;
-		boundsPanel.add(imaginaryMax, g);
-		
+		c.gridx = 6;
+		c.gridy = 0;
+		c.gridheight = 2;
+		boundsPanel.add(updateMandelbrot, c);
 
-		JButton resetMandlebrot = new JButton("Reset Mandlebrot Zoom");
-		resetMandlebrot.addActionListener(new ActionListener() {
+		//Mandelbrot reset button
+		JButton resetMandelbrot = new JButton("Reset Mandelbrot Zoom");
+		resetMandelbrot.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				mandelbrotViewer.setAxisBounds(-2, 1, -1.6, 1.6);
 				mandelbrotViewer.repaint();
 			}
 		});
-		g.gridx = 6;
-		g.gridy = 0;
-		boundsPanel.add(resetMandlebrot, g);
+		c.gridx = 7;
+		c.gridy = 0;
+		c.gridheight = 1;
+		boundsPanel.add(resetMandelbrot, c);
 		
+		//Julia reset button
 		JButton resetJulia = new JButton("Reset Julia Zoom");
 		resetJulia.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -226,10 +240,14 @@ public class FractalExplorer extends JFrame{
 				juliaViewer.repaint();
 			}
 		});
-		g.gridy = 1;
-		boundsPanel.add(resetJulia, g);
+		c.gridy = 1;
+		boundsPanel.add(resetJulia, c);
 		
 		return boundsPanel;
+	}
+	
+	private void checkBounds() throws IllegalArgumentException{
+		if((double)imaginaryMax.getValue() >= (double)imaginaryMin.getValue()) throw new IllegalArgumentException();
 	}
 	
 	private JPanel storageInit(){

@@ -126,11 +126,7 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 	
 	public void updateSet(ComplexSet set) {
 		this.set = set;
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				repaint();
-			}
-		});
+		repaint();
 	}
 	
 	public ComplexNumber getComplexAtPoint(Point p){				
