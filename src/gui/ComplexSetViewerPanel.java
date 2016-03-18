@@ -5,13 +5,10 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
 
 import complexMaths.ComplexNumber;
@@ -22,12 +19,10 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 
 	private BufferedImage img;
 	private ComplexSet set;
+	private double realMin, realMax, imaginaryMin, imaginaryMax;
 	
 	private boolean dragging = false;
-	private Point origin;
-	private Point corner;
-	
-	private double realMin, realMax, imaginaryMin, imaginaryMax;
+	private Point origin, corner;
 	
 	private ExecutorService executor;
 	
@@ -52,16 +47,22 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 	}
 	
 	@Override
-	public void paintComponent(Graphics g){
-		g.clearRect(0, 0, getWidth(), getHeight());		
+	public void paintComponent(Graphics g){		
+		//Updating the image while using the drag-zoom makes it run incredibly slowly, and the
+		//image shouldn't be changing then anyway
 		 if(!dragging){
+			 //Make sure the image is the right size for the panel, in case the window was resized since
+			 //the last repaint
 			 img = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
 			 updateImage();
 		 }
 		g.drawImage(img, 0, 0, this);	
 		
+		//draw the drag rectangle
 		if(dragging){
 			g.setColor(Color.RED);
+			//This makes sure the rectangle doesn't have negative height and width values when the corner
+			//is closer to (0,0) than the drag origin.
 			int x = Math.min(corner.x, origin.x);
 			int y = Math.min(corner.y, origin.y);
 			int width = Math.abs(corner.x - origin.x);
@@ -70,58 +71,44 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 		}
 	}
 
+	//Calculate the image for the visible part of the set
 	private void updateImage() {		
+		//The length of the visible section of the real axis
 		double realWidth = realMax - realMin;
+		//The length of the visible section of the imaginary axis
+		double imaginaryHeight = imaginaryMax - imaginaryMin;
 		
+		//multiplied by the divergence depth of each point to keep the colour value <256
 		double c = 255f/((double)set.getDepth());
 		
-		Future<?> f = null;
-		
+		//for each column of pixels
 		for(int x = 0; x < img.getWidth(); x++){
+			//The amount by which x=0 (on screen) is offset from the imaginary axis
 			double offsetX = (realMin * img.getWidth()) / realWidth;
+			//the real value corresponding to that column
 			double real = (x + offsetX) * (realWidth / (double)img.getWidth());
+			//for each pixel in the column
 			for(int y = 0; y < img.getHeight(); y++){
-				f = executor.submit(new ImageTask(x, y, real, c));
+				//The amount by which y=0 (on screen) is offset from the real axis
+				double offsetY = (imaginaryMin * img.getHeight()) / imaginaryHeight;
+				//the imaginary value corresponding to this pixel
+				double imaginary = ((y + offsetY)) * (imaginaryHeight / (double)img.getHeight());
+				
+				//get the number of iterations before this point diverges from the set
+				int n = set.getPointDivergenceDepth(new ComplexNumber(real, imaginary));
+				//get the colour value for this pixel
+				int r = (int)(n*c);
+				try{
+					//set the pixels colour. The y value assignment is like that because 0 is
+					//at the top of the screen, so the image need to be 'flipped' to render the set
+					//in a way that makes sense to the user
+					img.setRGB(x, (img.getHeight() - 1) - y, new Color(r,r,r).getRGB());
+				}catch(ArrayIndexOutOfBoundsException e){
+					//In case it tries to assign a value to a pixel not in the image
+					System.err.println(e.getMessage() + " x:" + x + " y:" + y);
+				}
 			}
 		}
-		
-		try {
-			f.get();
-		} catch (InterruptedException | ExecutionException e) {
-			e.printStackTrace();
-		}	
-	}
-	
-
-	
-	private class ImageTask implements Runnable{
-		
-		private int x, y;
-		private double real, c;
-		
-		public ImageTask(int x, int y, double real, double c) {
-			this.x = x;
-			this.y = y;
-			this.real = real;
-			this.c = c;
-		}
-
-		@Override
-		public void run() {
-			double imaginaryHeight = imaginaryMax - imaginaryMin;
-			
-			double offsetY = (imaginaryMin * img.getHeight()) / imaginaryHeight;
-			double imaginary = ((y + offsetY)) * (imaginaryHeight / (double)img.getHeight());
-			
-			int n = set.getPointDivergenceDepth(new ComplexNumber(real, imaginary));
-			int r = (int)(n*c);
-			try{
-				img.setRGB(x, (img.getHeight() - 1) - y, new Color(r,r,r).getRGB());
-			}catch(ArrayIndexOutOfBoundsException e){
-				System.err.println(e.getMessage() + " x:" + x + " y:" + y);
-			}
-		}
-		
 	}
 	
 	public void updateSet(ComplexSet set) {
@@ -129,6 +116,11 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 		repaint();
 	}
 	
+	/* Performs the same operation as the code in updateImage.
+	 * The reason updateImage doesn't call this method is that it would involve re-calculating the same real value up to 1500 times
+	 * for each column of pixels, and as performance is important (especially at higher iteration depths) the code in updateImage
+	 * has been changed to make it better optimised. Unfortunately, this means it can't be used to get one point at a time;
+	 */
 	public ComplexNumber getComplexAtPoint(Point p){				
 		double realWidth = realMax - realMin;
 		double imaginaryHeight = imaginaryMax - imaginaryMin;
@@ -141,15 +133,14 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 		ComplexNumber c1 = getComplexAtPoint(origin);
 		ComplexNumber c2 = getComplexAtPoint(corner);
 		
+		//this bit makes sure the bounds aren't 'flipped', so the highest x value is always the max, etc.
 		setImaginaryMax(Math.max(c1.getImaginary(), c2.getImaginary()));
-		System.out.println(getImaginaryMax());
 		setImaginaryMin(Math.min(c1.getImaginary(), c2.getImaginary()));
-		System.out.println(getImaginaryMin());
 		setRealMax(Math.max(c1.getReal(), c2.getReal()));
-		System.out.println(getRealMax());
 		setRealMin(Math.min(c1.getReal(), c2.getReal()));
-		System.out.println(getRealMin());	
 	}
+	
+//Mouse Events -----------------------------------------------------------------------------------------------------------
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
@@ -160,18 +151,20 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		origin = e.getPoint();	
-		corner = new Point(e.getX() + 1, e.getY() + 1);		
+		origin = e.getPoint();		
 	}
 
 	@Override
-	public void mouseReleased(MouseEvent e) {		
+	public void mouseReleased(MouseEvent e) {	
+		//This check makes sure it doesn't zoom in when the user just clicks
 		if(dragging){
 			dragging = false;		
 			zoom();
 			repaint();
 		}
 	}
+	
+//Getters and Setters ------------------------------------------------------------------------------------------------------
 
 	public double getRealMin() {
 		return realMin;
@@ -223,29 +216,19 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 	public ComplexSet getSet() {
 		return set;
 	}
+	
+//All of these are stubs from the mouse listener interface-------------------------------------------------------------
 		
 	@Override
-	public void mouseMoved(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseMoved(MouseEvent e) {}
 	
 	@Override
-	public void mouseClicked(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseClicked(MouseEvent e) {}
 
 	@Override
-	public void mouseEntered(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseEntered(MouseEvent e) {}
 
 	@Override
-	public void mouseExited(MouseEvent e) {
-		// TODO Auto-generated method stub
-		
-	}
+	public void mouseExited(MouseEvent e) {}
 	
 }

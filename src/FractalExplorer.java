@@ -21,8 +21,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import complexMaths.*;
 import gui.*;
@@ -164,14 +162,15 @@ public class FractalExplorer extends JFrame{
 		c.gridx = 1;
 		boundsPanel.add(iterations, c);
 		
-		//ADD MANDLEBROT MIN/MAX CONTROLS----------------------------------------------------------
+		//ADD MANDLEBROT MIN/MAX CONTROLS----------------------------------------------------------		
 		//RMin label
 		JLabel realMinLbl = new JLabel("Real min");
 		c.gridy = 0;
 		c.gridx = 2;
 		boundsPanel.add(realMinLbl, c);
 		//RMin spinner
-		realMin = new JSpinner(new SpinnerNumberModel(-2, -2, 1, 0.25));
+		LinkedSpinnerDoubleModel rMinModel = new LinkedSpinnerDoubleModel(-2, -2, 1, 0.25);
+		realMin = new JSpinner(rMinModel);
 		c.gridx = 3;
 		boundsPanel.add(realMin, c);
 		
@@ -181,7 +180,9 @@ public class FractalExplorer extends JFrame{
 		c.gridy = 1;
 		boundsPanel.add(realMaxLbl, c);
 		//RMax spinner
-		realMax = new JSpinner(new SpinnerNumberModel(1, -2, 1, 0.25));
+		LinkedSpinnerDoubleModel rMaxModel = new LinkedSpinnerDoubleModel(1, -2, 1, 0.25);
+		rMaxModel.setLinkedModel(rMinModel, true);
+		realMax = new JSpinner(rMaxModel);
 		c.gridx = 3;
 		boundsPanel.add(realMax, c);
 		
@@ -191,7 +192,8 @@ public class FractalExplorer extends JFrame{
 		c.gridy = 0;
 		boundsPanel.add(imaginaryMinLbl, c);
 		//IMin spinner
-		imaginaryMin = new JSpinner(new SpinnerNumberModel(-1.6, -1.6, 1.6, 0.2));
+		LinkedSpinnerDoubleModel iMinModel = new LinkedSpinnerDoubleModel(-1.6, -1.6, 1.6, 0.2);
+		imaginaryMin = new JSpinner(iMinModel);
 		c.gridx = 5;
 		boundsPanel.add(imaginaryMin, c);
 		
@@ -201,7 +203,9 @@ public class FractalExplorer extends JFrame{
 		c.gridy = 1;
 		boundsPanel.add(imaginaryMaxLbl, c);
 		//IMax spinner
-		imaginaryMax = new JSpinner(new SpinnerNumberModel(1.6, -1.6, 1.6, 0.2));
+		LinkedSpinnerDoubleModel iMaxModel = new LinkedSpinnerDoubleModel(1.6, -1.6, 1.6, 0.2);
+		iMaxModel.setLinkedModel(iMinModel, true);
+		imaginaryMax = new JSpinner(iMaxModel);
 		c.gridx = 5;
 		boundsPanel.add(imaginaryMax, c);
 		
@@ -210,6 +214,7 @@ public class FractalExplorer extends JFrame{
 		updateMandelbrot.addActionListener(new ActionListener() {			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				mandelbrotViewer.setIterationDepth((int)iterations.getValue()); 
 				mandelbrotViewer.setAxisBounds((double)realMin.getValue(), (double)realMax.getValue(), (double)imaginaryMin.getValue(), (double)imaginaryMax.getValue());
 				mandelbrotViewer.repaint();
 			}
@@ -244,10 +249,6 @@ public class FractalExplorer extends JFrame{
 		boundsPanel.add(resetJulia, c);
 		
 		return boundsPanel;
-	}
-	
-	private void checkBounds() throws IllegalArgumentException{
-		if((double)imaginaryMax.getValue() >= (double)imaginaryMin.getValue()) throw new IllegalArgumentException();
 	}
 	
 	private JPanel storageInit(){
