@@ -8,8 +8,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -44,11 +51,15 @@ public class FractalExplorer extends JFrame{
 	
 	private int cpHeight = 60; 
 
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		try {
+			AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(new File("MandelbrotSet.wav").getAbsoluteFile());
+	        Clip clip = AudioSystem.getClip();
+	        clip.open(audioInputStream);
+	        clip.start();
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			SwingUtilities.invokeAndWait(new Runnable(){ public void run(){ new FractalExplorer().init();}});
-		} catch (InvocationTargetException | InterruptedException | ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+		} catch (InvocationTargetException | InterruptedException | ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException | LineUnavailableException | IOException | UnsupportedAudioFileException e) {
 			e.printStackTrace();
 		}
 	}
@@ -111,18 +122,18 @@ public class FractalExplorer extends JFrame{
 		JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
 		controlPanel.setBounds(0, mandelbrotViewer.getHeight(), getWidth(), cpHeight);
 		
-		//add the mandlebrot set bounds controls
+		//add the Mandelbrot set bounds controls
 		controlPanel.add(boundsInit());
 		
-		//add seperator to make UI easier to understand
+		//add separator to make UI easier to understand
 		JSeparator sep = new JSeparator(JSeparator.VERTICAL);
 		sep.setPreferredSize(new Dimension(1, cpHeight - 20));
 		controlPanel.add(sep);
 		
-		//add julia set storage controls
+		//add Julia set storage controls
 		controlPanel.add(storageInit());
 		
-		//another seperator
+		//another separator
 		JSeparator sep1 = new JSeparator(JSeparator.VERTICAL);
 		sep1.setPreferredSize(new Dimension(1, cpHeight - 20));
 		controlPanel.add(sep1);

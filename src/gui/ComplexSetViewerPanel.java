@@ -5,8 +5,6 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import javax.swing.JPanel;
 import javax.swing.event.MouseInputListener;
@@ -23,8 +21,6 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 	
 	private boolean dragging = false;
 	private Point origin, corner;
-	
-	private ExecutorService executor;
 	
 	/**
 	 * Calls public ComplexSetViewerPanel(ComplexSet set, double realMin, double realMax, double imaginaryMin, double imaginaryMax)
@@ -43,7 +39,6 @@ public class ComplexSetViewerPanel extends JPanel implements MouseInputListener{
 		this.imaginaryMax = imaginaryMax;		
 		addMouseListener(this);
 		addMouseMotionListener(this);
-		executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	}
 	
 	@Override
